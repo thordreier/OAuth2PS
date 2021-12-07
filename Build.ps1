@@ -1,12 +1,12 @@
 <#PSScriptInfo
-	.VERSION 0.1.20211203.85318
+	.VERSION 0.1.20211207.123453
 	.GUID e0a6966d-65c7-4ed7-8f6c-417fb2d43c5f
 	.AUTHOR Thor Dreier
 	.COMPANYNAME Someone
 	.COPYRIGHT This is free and unencumbered software released into the public domain
 	.TAGS
-	.LICENSEURI
-	.PROJECTURI
+	.LICENSEURI https://unlicense.org/
+	.PROJECTURI https://github.com/thordreier/PowerShellModuleTools
 	.ICONURI
 	.EXTERNALMODULEDEPENDENCIES
 	.REQUIREDSCRIPTS
@@ -14,7 +14,19 @@
 	.RELEASENOTES
 #>
 
-# Error in this is terminating
+<#
+        .SYNOPSIS
+            Build module
+
+        .DESCRIPTION
+            Build module - combine files to psm1, create psd1, zip it, ...
+
+        .PARAMETER Path
+            Path
+
+        .EXAMPLE
+            Invoke-ModuleBuild
+    #>
 param (
         [Parameter()]
         [String]
@@ -70,7 +82,11 @@ param (
 
         [Parameter()]
         [String[]]
-        $ExtraPSFile = @(),
+        $ExtraPSFile = @('Include\*.ps1'),
+
+        [Parameter()]
+        [String]
+        $IncludeFileDir = 'IncludeFile',
 
         [Parameter()]
         [Version]
@@ -132,6 +148,19 @@ param (
 
 function Invoke-ModuleBuild
 {
+    <#
+        .SYNOPSIS
+            Build module
+
+        .DESCRIPTION
+            Build module - combine files to psm1, create psd1, zip it, ...
+
+        .PARAMETER Path
+            Path
+
+        .EXAMPLE
+            Invoke-ModuleBuild
+    #>
     [CmdletBinding(DefaultParameterSetName = 'JsonFile')]
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssignments',         'type', Justification='Variable IS used, ScriptAnalyzer is wrong')]
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssignments',         'h',    Justification='Variable IS used, ScriptAnalyzer is wrong')]
@@ -191,7 +220,11 @@ function Invoke-ModuleBuild
 
         [Parameter()]
         [String[]]
-        $ExtraPSFile = @(),
+        $ExtraPSFile = @('Include\*.ps1'),
+
+        [Parameter()]
+        [String]
+        $IncludeFileDir = 'IncludeFile',
 
         [Parameter()]
         [Version]
@@ -319,6 +352,19 @@ function Invoke-ModuleBuild
             }
             Set-Content -Path $Name -Value $Content
             Get-Item -Path $Name
+        }
+
+        # Easy join multiple parts of a path
+        function JoinPath ([array] $Path)
+        {
+            if ($Path.Length -gt 1)
+            {
+                Join-Path -Path $Path[0] -ChildPath (JoinPath -Path ($Path | Select-Object -Skip 1))
+            }
+            else
+            {
+                $Path
+            }
         }
     }
 
@@ -574,7 +620,7 @@ function Invoke-ModuleBuild
                     $variables.Psm1 = CreateFile -Dir $variables.TargetDirectory -Name "$($variables.TargetName).psm1" -Content $psm1Content -NoTrim:$NoTrim
 
                     # TODO cleanup temp files
-                    $psd1Tmp = (New-TemporaryFile).FullName + '.psd1'
+                    $psd1Tmp = Join-Path -Path $variables.TargetDirectory -ChildPath tmp.psd1
                     if ($manifestFileInfo)
                     {
                         Copy-Item -Path $manifestFileInfo -Destination $psd1Tmp
@@ -603,12 +649,19 @@ function Invoke-ModuleBuild
 
                     # Manifest
                     $psd1Content = Get-Content -Path $psd1Tmp -Raw
+					Remove-Item -Path $psd1Tmp
                     if (-not $NoTrim)
                     {
                         # Update-ModuleManifest produces nice comments for each setting, but top comments about who ran the command and such will be stripped
                         $psd1Content = $psd1Content -replace '^(#.*(\r?\n)+)*',''
                     }
                     $variables.Psd1 = CreateFile -Dir $variables.TargetDirectory -Name "$($variables.TargetName).psd1" -Content $psd1Content -NoTrim:$NoTrim
+
+                    # Include extra files
+                    if (Test-Path -Path $IncludeFileDir)
+                    {
+                        Copy-Item -Recurse -Path (JoinPath $IncludeFileDir,'*') -Destination $variables.TargetDirectory
+                    }
                 }
                 elseif ($PSCmdlet.ParameterSetName -eq 'ScriptFromTemplate')
                 {
@@ -739,21 +792,37 @@ function Invoke-ModuleBuild
                 # User defined ScriptBlock's. The second ForEach-Object is just to get $variables become $_ inside the ScriptBlock
                 $AfterZip | ForEach-Object -Process {$variables | ForEach-Object -Process $_}
 
+                function JoinPath ([array] $Path)
+                {
+                    if ($Path.Length -gt 1)
+                    {
+                        Join-Path -Path $Path[0] -ChildPath (JoinPath -Path ($Path | Select-Object -Skip 1))
+                    }
+                    else
+                    {
+                        $Path
+                    }
+                }
+
                 # Install module
                 if ($PSCmdlet.ParameterSetName -eq 'Module')
                 {
-                        if ($InstallModule)
+                    if ($InstallModule)
+                    {
+                        if (@('AllUsers','CurrentUser') -contains $InstallModulePath)
                         {
-                            switch ($InstallModulePath)
-                            {
-                                'AllUsers'    {$InstallModulePath = "$($env:ProgramFiles)\WindowsPowerShell\Modules"}
-                                'CurrentUser' {$InstallModulePath = "$($home)\Documents\WindowsPowerShell\Modules"  }
-                            }
-                            $moduleInstallDirPath = "$($InstallModulePath)\$($variables.TargetName)\$($variables.Version)"
-                            Write-Verbose -Message "Installing module in $moduleInstallDirPath"
-                            $moduleInstallDir = CreateDirectory -Path $moduleInstallDirPath
-                            [System.IO.Compression.ZipFile]::ExtractToDirectory($variables.TargetZip.FullName, $moduleInstallDir.FullName)
+                            $InstallModulePath = JoinPath @(
+                                &{if ($InstallModulePath -eq 'AllUsers') {$env:ProgramFiles} else {[Environment]::GetFolderPath('MyDocuments')}}
+                                &{if ($PSVersionTable.ContainsKey('PSEdition') -and $PSVersionTable.PSEdition -eq 'Core') {'PowerShell'} else {'WindowsPowerShell'}}
+                                'Modules'
+                                $variables.TargetName
+                                $variables.Version
+                            )
                         }
+                        Write-Verbose -Message "Installing module in $InstallModulePath"
+                        $moduleInstallDir = CreateDirectory -Path $InstallModulePath
+                        [System.IO.Compression.ZipFile]::ExtractToDirectory($variables.TargetZip.FullName, $moduleInstallDir.FullName)
+                    }
                 }
             }
         }

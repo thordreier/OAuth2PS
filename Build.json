@@ -1,6 +1,7 @@
 [
     {
         "TargetName":  "OAuth2PS",
-        "Type":  "Module"
+        "Type":  "Module",
+        "VersionAppendDate":  true
     }
 ]
