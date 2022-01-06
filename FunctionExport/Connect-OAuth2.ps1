@@ -1,7 +1,44 @@
 function Connect-OAuth2
 {
     <#
-        FIXXXME - write help stuff
+        .SYNOPSIS
+            Authenticate with OAuth2
+
+        .DESCRIPTION
+            Authenticate with OAuth2
+            Get token
+
+        .PARAMETER Uri
+            Uri for authentication endpoint
+
+        .PARAMETER ClientCredential
+            Credential object with:
+            Username = ClientId
+            Password = ClientSecret
+
+        .PARAMETER ClientId
+            ClientId to authenticate with
+
+        .PARAMETER ClientSecret
+            ClientSecret to authenticate with
+
+        .PARAMETER AuthBody
+            Extra auth body - required by some endpoints to get access to resources
+
+        .PARAMETER ReturnToken
+            Return token as string
+
+        .PARAMETER ReturnHeader
+            Return hashtable that can be used by Invoke-RestMethod and Invoke-WebRequest
+
+        .PARAMETER ReturnResponse
+            Return full response recieved from server
+
+        .EXAMPLE
+            Connect-OAuth2 -Uri "$uri/auth/token" -ClientCredential aaaa -ClientSecret bbbb -AuthBody @{scope = 'all'}
+
+        .EXAMPLE
+            Invoke-RestMethod -Uri "$uri/api/Info" -Headers (Connect-OAuth2 -Uri "$uri/auth/token" -ClientCredential $cred -ReturnHeader)
     #>
 
     [CmdletBinding()]
