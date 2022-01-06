@@ -16,7 +16,7 @@ GUID = 'c07a83e2-712b-4121-92d6-23a988c97b85'
 Author = 'Thor Dreier'
 
 # Company or vendor of this module
-CompanyName = 'Someone'
+CompanyName = 'Thor Dreier'
 
 # Copyright statement for this module
 Copyright = 'MIT License'
@@ -112,7 +112,7 @@ PrivateData = @{
 
     } # End of PSData hashtable
 
-} # End of PrivateData hashtable
+ } # End of PrivateData hashtable
 
 # HelpInfo URI of this module
 # HelpInfoURI = ''
