@@ -35,7 +35,7 @@ function Connect-OAuth2
             Return full response recieved from server
 
         .EXAMPLE
-            Connect-OAuth2 -Uri "$uri/auth/token" -ClientCredential aaaa -ClientSecret bbbb -AuthBody @{scope = 'all'}
+            Connect-OAuth2 -Uri "$uri/auth/token" -ClientId aaaa -ClientSecret bbbb -AuthBody @{scope = 'all'}
 
         .EXAMPLE
             Invoke-RestMethod -Uri "$uri/api/Info" -Headers (Connect-OAuth2 -Uri "$uri/auth/token" -ClientCredential $cred -ReturnHeader)

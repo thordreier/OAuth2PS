@@ -1,12 +1,3 @@
-# OAuth2PS
-
-PowerShell functions to authenticate with OAuth2.
-
-## Usage
-
-### Examples
-
-```powershell
 # Get OAuth2 token, set scope="all" (some places require a token)
 Connect-OAuth2 -Uri "$uri/auth/token" -ClientId aaaa -ClientSecret bbbb
 
@@ -17,27 +8,3 @@ $cred = Get-Credential  # Username is ClientId, Password is ClientSecret
                         # $cred = Get-VaultCredential -Name OAuth2Token
 $headers = Connect-OAuth2 -Uri "$uri/auth/token" -ClientCredential $cred -ReturnHeader -AuthBody @{scope = 'all'}
 Invoke-RestMethod -Uri "$uri/api/Asset" -Headers $headers
-
-```
-
-Examples are also found in [EXAMPLES.ps1](EXAMPLES.ps1).
-
-### Functions
-
-See [FUNCTIONS.md](FUNCTIONS.md) for documentation of funtions in this module.
-
-## Install
-
-### Install module from PowerShell Gallery
-
-```
-Install-Module OAuth2PS
-```
-
-### Install module from source
-
-```
-git clone https://github.com/thordreier/OAuth2PS.git
-cd OAuth2PS
-.\Build.ps1 -InstallModule
-```
