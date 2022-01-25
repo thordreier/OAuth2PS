@@ -1,4 +1,4 @@
-# Get OAuth2 token, set scope="all" (some places require a token)
+# Get OAuth2 token
 Connect-OAuth2 -Uri "$uri/auth/token" -ClientId aaaa -ClientSecret bbbb
 
 # Get OAuth2 token and use it with Invoke-RestMethod
