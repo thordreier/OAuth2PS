@@ -66,22 +66,46 @@ function Connect-OAuth2
         [string]
         $ClientSecret,
 
+        [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='CredentialReturnToken')]
+        [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='CredentialReturnHeader')]
+        [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='CredentialReturnResponse')]
+        [pscredential]
+        $Credential,
+
+        [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='UserPassReturnToken')]
+        [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='UserPassReturnHeader')]
+        [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='UserPassReturnResponse')]
+        [string]
+        $Username,
+
+        [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='UserPassReturnToken')]
+        [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='UserPassReturnHeader')]
+        [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='UserPassReturnResponse')]
+        [string]
+        $Password,
+
         [Parameter(Mandatory=$false, ValueFromPipelineByPropertyName=$true)]
         [hashtable]
         $AuthBody = @{},
 
         [Parameter(Mandatory=$false, ParameterSetName='ClientCredentialReturnToken')]
         [Parameter(Mandatory=$false, ParameterSetName='ClientReturnToken')]
+        [Parameter(Mandatory=$false, ParameterSetName='CredentialReturnToken')]
+        [Parameter(Mandatory=$false, ParameterSetName='UserPassReturnToken')]
         [switch]
         $ReturnToken,
 
         [Parameter(Mandatory=$true, ParameterSetName='ClientCredentialReturnHeader')]
         [Parameter(Mandatory=$true, ParameterSetName='ClientReturnHeader')]
+        [Parameter(Mandatory=$true, ParameterSetName='CredentialReturnHeader')]
+        [Parameter(Mandatory=$true, ParameterSetName='UserPassReturnHeader')]
         [switch]
         $ReturnHeader,
 
         [Parameter(Mandatory=$true, ParameterSetName='ClientCredentialReturnResponse')]
         [Parameter(Mandatory=$true, ParameterSetName='ClientReturnResponse')]
+        [Parameter(Mandatory=$true, ParameterSetName='CredentialReturnResponse')]
+        [Parameter(Mandatory=$true, ParameterSetName='UserPassReturnResponse')]
         [switch]
         $ReturnResponse
     )
@@ -108,9 +132,25 @@ function Connect-OAuth2
                 $ClientSecret = $ClientCredential.GetNetworkCredential().Password
             }
 
-            $AuthBody['grant_type']    = 'client_credentials'
-            $AuthBody['client_id']     = $ClientId
-            $AuthBody['client_secret'] = $ClientSecret
+            if ($ClientId -and $ClientSecret)
+            {
+                $AuthBody['grant_type']    = 'client_credentials'
+                $AuthBody['client_id']     = $ClientId
+                $AuthBody['client_secret'] = $ClientSecret
+            }
+
+            if ($Credential)
+            {
+                $Username = $Credential.UserName
+                $Password = $Credential.GetNetworkCredential().Password
+            }
+
+            if ($Username -and $Password)
+            {
+                $AuthBody['grant_type'] = 'password'
+                $AuthBody['username']   = $Username
+                $AuthBody['password']   = $Password
+            }
 
             $response = Invoke-RestMethod -Method Post -Uri $Uri -Body $authBody -ErrorAction Stop
 

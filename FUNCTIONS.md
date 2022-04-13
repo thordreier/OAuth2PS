@@ -33,6 +33,18 @@ SYNTAX
     
     Connect-OAuth2 [-Uri] <String> -ClientId <String> -ClientSecret <String> [-AuthBody <Hashtable>] [-ReturnToken] [<CommonParameters>]
     
+    Connect-OAuth2 [-Uri] <String> -Credential <PSCredential> [-AuthBody <Hashtable>] -ReturnResponse [<CommonParameters>]
+    
+    Connect-OAuth2 [-Uri] <String> -Credential <PSCredential> [-AuthBody <Hashtable>] -ReturnHeader [<CommonParameters>]
+    
+    Connect-OAuth2 [-Uri] <String> -Credential <PSCredential> [-AuthBody <Hashtable>] [-ReturnToken] [<CommonParameters>]
+    
+    Connect-OAuth2 [-Uri] <String> -Username <String> -Password <String> [-AuthBody <Hashtable>] -ReturnResponse [<CommonParameters>]
+    
+    Connect-OAuth2 [-Uri] <String> -Username <String> -Password <String> [-AuthBody <Hashtable>] -ReturnHeader [<CommonParameters>]
+    
+    Connect-OAuth2 [-Uri] <String> -Username <String> -Password <String> [-AuthBody <Hashtable>] [-ReturnToken] [<CommonParameters>]
+    
     
 DESCRIPTION
     Authenticate with OAuth2
@@ -54,6 +66,12 @@ PARAMETERS
     -ClientSecret <String>
         ClientSecret to authenticate with
         
+    -Credential <PSCredential>
+        
+    -Username <String>
+        
+    -Password <String>
+        
     -AuthBody <Hashtable>
         Extra auth body - required by some endpoints to get access to resources
         
@@ -74,7 +92,7 @@ PARAMETERS
     
     -------------------------- EXAMPLE 1 --------------------------
     
-    PS C:\>Connect-OAuth2 -Uri "$uri/auth/token" -ClientCredential aaaa -ClientSecret bbbb -AuthBody @{scope = 'all'}
+    PS C:\>Connect-OAuth2 -Uri "$uri/auth/token" -ClientId aaaa -ClientSecret bbbb -AuthBody @{scope = 'all'}
     
     
     
