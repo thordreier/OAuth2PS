@@ -22,6 +22,15 @@ function Connect-OAuth2
         .PARAMETER ClientSecret
             ClientSecret to authenticate with
 
+        .PARAMETER Credential
+            Credential object to authenticate with (same as Username+Password)
+
+        .PARAMETER Username
+            Username to authenticate with
+
+        .PARAMETER Password
+            Password to authenticate with
+
         .PARAMETER AuthBody
             Extra auth body - required by some endpoints to get access to resources
 
