@@ -31,6 +31,9 @@ function Connect-OAuth2
         .PARAMETER Password
             Password to authenticate with
 
+        .PARAMETER WebRequestParams
+            Extra parameters to Invoke-WebRequest
+
         .PARAMETER AuthBody
             Extra auth body - required by some endpoints to get access to resources
 
@@ -40,7 +43,13 @@ function Connect-OAuth2
         .PARAMETER ReturnHeader
             Return hashtable that can be used by Invoke-RestMethod and Invoke-WebRequest
 
+        .PARAMETER ReturnCookies
+            Include cookies in header
+
         .PARAMETER ReturnResponse
+            Return response body recieved from server
+
+        .PARAMETER ReturnFullResponse
             Return full response recieved from server
 
         .EXAMPLE
@@ -60,38 +69,48 @@ function Connect-OAuth2
         [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='ClientCredentialReturnToken')]
         [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='ClientCredentialReturnHeader')]
         [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='ClientCredentialReturnResponse')]
+        [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='ClientCredentialReturnFullResponse')]
         [pscredential]
         $ClientCredential,
 
         [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='ClientReturnToken')]
         [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='ClientReturnHeader')]
         [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='ClientReturnResponse')]
+        [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='ClientReturnFullResponse')]
         [string]
         $ClientId,
 
         [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='ClientReturnToken')]
         [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='ClientReturnHeader')]
         [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='ClientReturnResponse')]
+        [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='ClientReturnFullResponse')]
         [string]
         $ClientSecret,
 
         [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='CredentialReturnToken')]
         [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='CredentialReturnHeader')]
         [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='CredentialReturnResponse')]
+        [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='CredentialReturnFullResponse')]
         [pscredential]
         $Credential,
 
         [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='UserPassReturnToken')]
         [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='UserPassReturnHeader')]
         [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='UserPassReturnResponse')]
+        [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='UserPassReturnFullResponse')]
         [string]
         $Username,
 
         [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='UserPassReturnToken')]
         [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='UserPassReturnHeader')]
         [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='UserPassReturnResponse')]
+        [Parameter(Mandatory=$true,  ValueFromPipelineByPropertyName=$true, ParameterSetName='UserPassReturnFullResponse')]
         [string]
         $Password,
+
+        [Parameter(Mandatory=$false, ValueFromPipelineByPropertyName=$true)]
+        [hashtable]
+        $WebRequestParams = @{},
 
         [Parameter(Mandatory=$false, ValueFromPipelineByPropertyName=$true)]
         [hashtable]
@@ -111,12 +130,26 @@ function Connect-OAuth2
         [switch]
         $ReturnHeader,
 
+        [Parameter(ParameterSetName='ClientCredentialReturnHeader')]
+        [Parameter(ParameterSetName='ClientReturnHeader')]
+        [Parameter(ParameterSetName='CredentialReturnHeader')]
+        [Parameter(ParameterSetName='UserPassReturnHeader')]
+        [switch]
+        $ReturnCookies,
+
         [Parameter(Mandatory=$true, ParameterSetName='ClientCredentialReturnResponse')]
         [Parameter(Mandatory=$true, ParameterSetName='ClientReturnResponse')]
         [Parameter(Mandatory=$true, ParameterSetName='CredentialReturnResponse')]
         [Parameter(Mandatory=$true, ParameterSetName='UserPassReturnResponse')]
         [switch]
-        $ReturnResponse
+        $ReturnResponse,
+
+        [Parameter(Mandatory=$true, ParameterSetName='ClientCredentialReturnFullResponse')]
+        [Parameter(Mandatory=$true, ParameterSetName='ClientReturnFullResponse')]
+        [Parameter(Mandatory=$true, ParameterSetName='CredentialReturnFullResponse')]
+        [Parameter(Mandatory=$true, ParameterSetName='UserPassReturnFullResponse')]
+        [switch]
+        $ReturnFullResponse
     )
 
     begin
@@ -161,35 +194,57 @@ function Connect-OAuth2
                 $AuthBody['password']   = $Password
             }
 
-            $response = Invoke-RestMethod -Method Post -Uri $Uri -Body $authBody -ErrorAction Stop
+            $requestParams = $WebRequestParams.Clone()
+            $requestParams['Method']          = 'Post'
+            $requestParams['Uri']             = $Uri
+            $requestParams['Body']            = $AuthBody
+            $requestParams['UseBasicParsing'] = $true
+            $requestParams['ErrorAction']     = 'Stop'
+            $fullResponse = Invoke-WebRequest @requestParams
 
-            if ($PSCmdlet.ParameterSetName -like '*ReturnResponse')
+            if ($PSCmdlet.ParameterSetName -like '*ReturnFullResponse')
             {
                 # Return
-                $response
+                $fullResponse
             }
             else
             {
-                if (-not ($token = $response.access_token))
-                {
-                    throw "No auth token received from $Uri"
-                }
+                $response = $fullResponse.Content | ConvertFrom-Json
 
-                if ($PSCmdlet.ParameterSetName -like '*ReturnToken')
+                if ($PSCmdlet.ParameterSetName -like '*ReturnResponse')
                 {
                     # Return
-                    $token
-                }
-                elseif ($PSCmdlet.ParameterSetName -like '*ReturnHeader')
-                {
-                    # Return
-                    @{
-                        Authorization = "Bearer $token"
-                    }
+                    $response
                 }
                 else
                 {
-                    throw "Unsupported ParametersetName <$($PSCmdlet.ParameterSetName)>"
+                    if (-not ($token = $response.access_token))
+                    {
+                        throw "No auth token received from $Uri"
+                    }
+
+                    if ($PSCmdlet.ParameterSetName -like '*ReturnToken')
+                    {
+                        # Return
+                        $token
+                    }
+                    elseif ($PSCmdlet.ParameterSetName -like '*ReturnHeader')
+                    {
+                        $headers = @{
+                            Authorization = "Bearer $token"
+                        }
+                        if ($ReturnCookies)
+                        {
+                            $headers['Cookie'] = $fullResponse.Headers.GetEnumerator().Where({$_.Key -eq 'Set-Cookie'}).ForEach({$_.Value -replace ';.*$'}) -join '; '
+                        }
+
+                        # Return
+                        $headers
+                    }
+                    else
+                    {
+                        throw "Unsupported ParametersetName <$($PSCmdlet.ParameterSetName)>"
+                    }
                 }
             }
         }
