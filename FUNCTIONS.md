@@ -21,29 +21,37 @@ SYNOPSIS
     
     
 SYNTAX
-    Connect-OAuth2 [-Uri] <String> -ClientCredential <PSCredential> [-AuthBody <Hashtable>] -ReturnResponse [<CommonParameters>]
+    Connect-OAuth2 [-Uri] <String> -ClientCredential <PSCredential> [-WebRequestParams <Hashtable>] [-AuthBody <Hashtable>] -ReturnFullResponse [<CommonParameters>]
     
-    Connect-OAuth2 [-Uri] <String> -ClientCredential <PSCredential> [-AuthBody <Hashtable>] -ReturnHeader [<CommonParameters>]
+    Connect-OAuth2 [-Uri] <String> -ClientCredential <PSCredential> [-WebRequestParams <Hashtable>] [-AuthBody <Hashtable>] -ReturnResponse [<CommonParameters>]
     
-    Connect-OAuth2 [-Uri] <String> -ClientCredential <PSCredential> [-AuthBody <Hashtable>] [-ReturnToken] [<CommonParameters>]
+    Connect-OAuth2 [-Uri] <String> -ClientCredential <PSCredential> [-WebRequestParams <Hashtable>] [-AuthBody <Hashtable>] -ReturnHeader [-ReturnCookies] [<CommonParameters>]
     
-    Connect-OAuth2 [-Uri] <String> -ClientId <String> -ClientSecret <String> [-AuthBody <Hashtable>] -ReturnResponse [<CommonParameters>]
+    Connect-OAuth2 [-Uri] <String> -ClientCredential <PSCredential> [-WebRequestParams <Hashtable>] [-AuthBody <Hashtable>] [-ReturnToken] [<CommonParameters>]
     
-    Connect-OAuth2 [-Uri] <String> -ClientId <String> -ClientSecret <String> [-AuthBody <Hashtable>] -ReturnHeader [<CommonParameters>]
+    Connect-OAuth2 [-Uri] <String> -ClientId <String> -ClientSecret <String> [-WebRequestParams <Hashtable>] [-AuthBody <Hashtable>] -ReturnFullResponse [<CommonParameters>]
     
-    Connect-OAuth2 [-Uri] <String> -ClientId <String> -ClientSecret <String> [-AuthBody <Hashtable>] [-ReturnToken] [<CommonParameters>]
+    Connect-OAuth2 [-Uri] <String> -ClientId <String> -ClientSecret <String> [-WebRequestParams <Hashtable>] [-AuthBody <Hashtable>] -ReturnResponse [<CommonParameters>]
     
-    Connect-OAuth2 [-Uri] <String> -Credential <PSCredential> [-AuthBody <Hashtable>] -ReturnResponse [<CommonParameters>]
+    Connect-OAuth2 [-Uri] <String> -ClientId <String> -ClientSecret <String> [-WebRequestParams <Hashtable>] [-AuthBody <Hashtable>] -ReturnHeader [-ReturnCookies] [<CommonParameters>]
     
-    Connect-OAuth2 [-Uri] <String> -Credential <PSCredential> [-AuthBody <Hashtable>] -ReturnHeader [<CommonParameters>]
+    Connect-OAuth2 [-Uri] <String> -ClientId <String> -ClientSecret <String> [-WebRequestParams <Hashtable>] [-AuthBody <Hashtable>] [-ReturnToken] [<CommonParameters>]
     
-    Connect-OAuth2 [-Uri] <String> -Credential <PSCredential> [-AuthBody <Hashtable>] [-ReturnToken] [<CommonParameters>]
+    Connect-OAuth2 [-Uri] <String> -Credential <PSCredential> [-WebRequestParams <Hashtable>] [-AuthBody <Hashtable>] -ReturnFullResponse [<CommonParameters>]
     
-    Connect-OAuth2 [-Uri] <String> -Username <String> -Password <String> [-AuthBody <Hashtable>] -ReturnResponse [<CommonParameters>]
+    Connect-OAuth2 [-Uri] <String> -Credential <PSCredential> [-WebRequestParams <Hashtable>] [-AuthBody <Hashtable>] -ReturnResponse [<CommonParameters>]
     
-    Connect-OAuth2 [-Uri] <String> -Username <String> -Password <String> [-AuthBody <Hashtable>] -ReturnHeader [<CommonParameters>]
+    Connect-OAuth2 [-Uri] <String> -Credential <PSCredential> [-WebRequestParams <Hashtable>] [-AuthBody <Hashtable>] -ReturnHeader [-ReturnCookies] [<CommonParameters>]
     
-    Connect-OAuth2 [-Uri] <String> -Username <String> -Password <String> [-AuthBody <Hashtable>] [-ReturnToken] [<CommonParameters>]
+    Connect-OAuth2 [-Uri] <String> -Credential <PSCredential> [-WebRequestParams <Hashtable>] [-AuthBody <Hashtable>] [-ReturnToken] [<CommonParameters>]
+    
+    Connect-OAuth2 [-Uri] <String> -Username <String> -Password <String> [-WebRequestParams <Hashtable>] [-AuthBody <Hashtable>] -ReturnFullResponse [<CommonParameters>]
+    
+    Connect-OAuth2 [-Uri] <String> -Username <String> -Password <String> [-WebRequestParams <Hashtable>] [-AuthBody <Hashtable>] -ReturnResponse [<CommonParameters>]
+    
+    Connect-OAuth2 [-Uri] <String> -Username <String> -Password <String> [-WebRequestParams <Hashtable>] [-AuthBody <Hashtable>] -ReturnHeader [-ReturnCookies] [<CommonParameters>]
+    
+    Connect-OAuth2 [-Uri] <String> -Username <String> -Password <String> [-WebRequestParams <Hashtable>] [-AuthBody <Hashtable>] [-ReturnToken] [<CommonParameters>]
     
     
 DESCRIPTION
@@ -67,10 +75,16 @@ PARAMETERS
         ClientSecret to authenticate with
         
     -Credential <PSCredential>
+        Credential object to authenticate with (same as Username+Password)
         
     -Username <String>
+        Username to authenticate with
         
     -Password <String>
+        Password to authenticate with
+        
+    -WebRequestParams <Hashtable>
+        Extra parameters to Invoke-WebRequest
         
     -AuthBody <Hashtable>
         Extra auth body - required by some endpoints to get access to resources
@@ -81,7 +95,13 @@ PARAMETERS
     -ReturnHeader [<SwitchParameter>]
         Return hashtable that can be used by Invoke-RestMethod and Invoke-WebRequest
         
+    -ReturnCookies [<SwitchParameter>]
+        Include cookies in header
+        
     -ReturnResponse [<SwitchParameter>]
+        Return response body recieved from server
+        
+    -ReturnFullResponse [<SwitchParameter>]
         Return full response recieved from server
         
     <CommonParameters>
